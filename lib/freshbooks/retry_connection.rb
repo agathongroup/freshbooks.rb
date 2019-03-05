@@ -7,9 +7,10 @@ module FreshBooks
           result = super(method, elements)
           return result
         rescue Exception => e
-
+          nil
         end
       end
       raise e
+    end
   end
 end
