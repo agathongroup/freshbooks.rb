@@ -14,9 +14,15 @@ module FreshBooks
     def self.connection
       @@connection
     end
-    
+
+    @@retry_connection = nil
+    def self.retry_connection
+      @@retry_connection
+    end
+
     def self.establish_connection(account_url, auth_token, request_headers = {})
       @@connection = Connection.new(account_url, auth_token, request_headers)
+      @@retry_connection = RetryConnection.new(account_url, auth_token, request_headers)
     end
     
     def self.new_from_xml(xml_root)
@@ -126,7 +132,7 @@ module FreshBooks
       # Create the proc for the list proxy to retrieve the next page
       list_page_proc = proc do |page|
         options["page"] = page
-        response = FreshBooks::Base.connection.call_api("#{api_class_name}.#{action_name}", options)
+        response = FreshBooks::Base.retry_connection.call_api("#{api_class_name}.#{action_name}", options)
         
         raise FreshBooks::InternalError.new(response.error_msg) unless response.success?
         
